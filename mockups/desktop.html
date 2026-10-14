@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Index Landing Desktop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap">
+<style>
+/* Structure after the "Global Talent" reference: a rounded cinematic hero window with glass product UI,
+   a white intro row, a 2x2 bento of scenes with glass overlays, then the rest of the landing in the same
+   quiet white system. One typeface, no colour accent: the scenes carry the emotion.
+   Scene backgrounds are procedural stand-ins for generated video (see storyboard for prompts). */
+:root {
+  --page: #ffffff;
+  --text: #111111;
+  --muted: #6b6b6b;
+  --soft: #8a8a8a;
+  --line: #ececec;
+  --tint: #f6f5f3;
+  --glass: rgba(255, 255, 255, 0.22);
+  --glass-row: rgba(255, 255, 255, 0.14);
+  --glass-border: rgba(255, 255, 255, 0.38);
+  --r-frame: 24px;
+  --r-card: 16px;
+  --r-row: 10px;
+  --font: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: inherit; text-decoration: none; }
+:focus-visible { outline: 2px solid var(--text); outline-offset: 3px; }
+.glass { text-shadow: 0 1px 2px rgba(50, 25, 0, 0.25); background: var(--glass); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); border: 1px solid var(--glass-border); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .glass { background: rgba(255, 255, 255, 0.55); } }
+canvas.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.slot { background: rgba(255, 255, 255, 0.5); display: grid; place-items: center; font-size: 8px; color: rgba(17, 17, 17, 0.55); text-align: center; line-height: 1.1; overflow: hidden; }
+.slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+h1, h2, h3 { font-weight: 500; letter-spacing: -0.03em; margin: 0; }
+
+/* ── Hero ── */
+.hero { position: relative; margin: 14px; border-radius: var(--r-frame); overflow: hidden; height: 88vh; min-height: 680px; color: #fff; }
+.nav { position: absolute; z-index: 3; left: 0; right: 0; top: 0; height: 68px; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; }
+.logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 500; letter-spacing: -0.02em; }
+.logo i { width: 28px; height: 28px; border-radius: 50%; background: #fff; position: relative; }
+.logo i::after { content: ""; position: absolute; left: 7px; top: 7px; width: 14px; height: 14px; border-radius: 50%; background: rgba(201, 138, 43, 0.9); }
+.pills { display: flex; gap: 6px; list-style: none; margin: 0; padding: 0; }
+.pills a { display: block; padding: 6px 12px; border-radius: 999px; font-size: 12px; background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+.demo { padding: 8px 14px; border-radius: 999px; background: #fff; color: var(--text); font-size: 12px; font-weight: 500; }
+.search { position: absolute; z-index: 2; left: 50%; top: 24%; width: 420px; margin-left: -210px; border-radius: 16px; padding: 8px; overflow: hidden; transition: height 0.5s var(--ease); }
+.s-head { display: flex; align-items: center; gap: 12px; padding: 4px 8px 4px 4px; }
+.s-ico { width: 40px; height: 40px; border-radius: 10px; background: rgba(255, 255, 255, 0.18); display: grid; place-items: center; flex: none; }
+.s-q { flex: 1; font-size: 17px; font-weight: 500; position: relative; white-space: nowrap; }
+.s-q .ph { position: absolute; left: 0; top: 0; opacity: 0.55; }
+.s-q .caret { display: inline-block; width: 1.5px; height: 18px; background: #fff; vertical-align: -3px; margin-left: 1px; }
+.s-reg { display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 500; }
+.s-hint { margin: 6px 4px 0; padding: 8px 12px; border-radius: var(--r-row); background: var(--glass-row); font-size: 13px; }
+.rows { display: grid; gap: 6px; margin-top: 6px; }
+.row { display: grid; grid-template-columns: 36px 1fr auto; gap: 12px; align-items: center; padding: 8px 10px; border-radius: var(--r-row); background: var(--glass-row); }
+.row .slot { width: 36px; height: 44px; border-radius: 8px; }
+.row b { display: block; font-size: 13px; font-weight: 500; }
+.row span { display: block; font-size: 10.5px; opacity: 0.7; }
+.row .r { text-align: right; }
+.s-foot { text-align: center; font-size: 12px; font-weight: 500; padding: 10px 0 4px; }
+.cta { position: absolute; z-index: 2; left: 50%; bottom: 40px; transform: translateX(-50%); display: flex; gap: 4px; }
+.cta a { background: #fff; color: var(--text); font-size: 13px; font-weight: 500; }
+.cta .lbl { padding: 11px 18px; border-radius: 999px; }
+.cta .arr { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; transition: transform 0.25s var(--ease); }
+.cta:hover .arr { transform: scale(1.06) translateX(2px); }
+
+/* ── Intro ── */
+.intro { padding: 56px 46px 72px; display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: end; }
+.intro h1 { font-size: clamp(44px, 5.6vw, 80px); line-height: 1; }
+.stack { display: flex; margin-bottom: 18px; }
+.stack .slot { width: 34px; height: 34px; border-radius: 50%; border: 2px solid #fff; margin-left: -8px; background: #e9e4dc; font-size: 0; }
+.stack .slot:first-child { margin-left: 0; }
+.intro p { margin: 0; font-size: 14px; color: #555; line-height: 1.45; }
+
+/* ── Bento ── */
+.bento { padding: 0 46px 110px; display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; }
+.bento .r2 { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.card figure { position: relative; margin: 0; aspect-ratio: 16 / 10; border-radius: var(--r-card); overflow: hidden; color: #fff; }
+.bento .card figure { aspect-ratio: auto; height: 340px; }
+.bento .r2 .card figure, .bento .r3 .card figure { height: 320px; }
+.card h3 { font-size: 19px; margin-top: 14px; letter-spacing: -0.02em; }
+.card p { margin: 2px 0 0; font-size: 13px; color: #777; }
+.ov { position: absolute; inset: 0; display: flex; align-items: center; padding: 28px; }
+.wpill { background: #fff; color: var(--text); border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 500; display: inline-flex; gap: 8px; align-items: center; white-space: nowrap; }
+.gpill { border-radius: 999px; padding: 8px 14px; font-size: 13px; font-weight: 500; display: flex; justify-content: space-between; gap: 16px; align-items: center; }
+.tick { width: 18px; height: 18px; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; }
+.tree { display: grid; grid-template-columns: auto 120px 1fr; align-items: center; width: 100%; max-width: 560px; margin-left: auto; }
+.tree svg { width: 120px; height: 200px; overflow: visible; }
+.tree svg path { stroke: #fff; stroke-width: 1; fill: none; }
+.tree .list { display: grid; gap: 10px; }
+.trow { display: grid; grid-template-columns: 28px 1fr auto; gap: 10px; align-items: center; border-radius: 12px; padding: 8px 12px; font-size: 13px; }
+.trow i { width: 28px; height: 28px; border-radius: 50%; background: rgba(255, 255, 255, 0.85); display: grid; place-items: center; font-style: normal; font-size: 11px; font-weight: 600; color: var(--text); }
+.trow small { font-size: 11px; opacity: 0.8; }
+.legal { display: grid; gap: 8px; width: 230px; margin: 0 auto; justify-items: center; }
+.legal .gpill { width: 100%; }
+.prof { display: grid; gap: 8px; margin-left: auto; width: 250px; }
+.prof .pc { display: grid; grid-template-columns: 44px 1fr; gap: 12px; align-items: center; border-radius: 14px; padding: 10px; font-size: 13px; }
+.prof .pc .slot { width: 44px; height: 54px; border-radius: 8px; }
+.prof .pc span { display: block; font-size: 11px; opacity: 0.8; }
+.prof .wpill { justify-content: space-between; }
+.msgbar { width: 100%; max-width: 420px; margin: 0 auto; border-radius: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; font-size: 14px; }
+.msgbar .q { flex: 1; opacity: 0.85; }
+.msgbar .lang { font-size: 18px; font-weight: 500; display: flex; gap: 8px; align-items: center; }
+
+.bento .r3 { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1.6fr; gap: 20px; }
+.lab { display: block; margin-top: 14px; font-size: 12px; color: var(--soft); }
+.lab + h3 { margin-top: 2px !important; }
+.abt { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: 100%; max-width: 380px; margin-left: auto; }
+.abc { border-radius: 14px; padding: 10px; display: grid; gap: 6px; font-size: 13px; position: relative; }
+.abc .slot { aspect-ratio: 1; border-radius: 10px; }
+.abc b { font-weight: 500; }
+.abc small { font-size: 11px; opacity: 0.85; }
+.bar { height: 6px; border-radius: 6px; background: rgba(255, 255, 255, 0.25); overflow: hidden; }
+.bar i { display: block; height: 100%; background: #fff; border-radius: 6px; }
+.abc .wpill { position: absolute; top: 16px; right: 16px; padding: 4px 10px; font-size: 11px; }
+/* ── Rest of the landing, same quiet system ── */
+section.sec { padding: 0 46px 110px; }
+.sec-h { display: grid; grid-template-columns: 1fr 300px; gap: 40px; align-items: end; margin-bottom: 36px; }
+.sec-h h2 { font-size: clamp(36px, 4vw, 56px); line-height: 1.02; }
+.sec-h p { margin: 0; font-size: 14px; color: #555; }
+.svc { display: grid; grid-template-columns: repeat(3, 1fr); border-top: 1px solid var(--line); }
+.svc div { padding: 26px 26px 30px 0; border-bottom: 1px solid var(--line); }
+.svc div:not(:nth-child(3n + 1)) { padding-left: 26px; border-left: 1px solid var(--line); }
+.svc small { font-size: 12px; color: var(--soft); }
+.svc h3 { font-size: 22px; margin: 6px 0 6px; letter-spacing: -0.02em; }
+.svc p { margin: 0; font-size: 14px; color: var(--muted); }
+.case { display: grid; grid-template-columns: 1.1fr 1fr; gap: 20px; }
+.case figure { position: relative; margin: 0; border-radius: var(--r-card); overflow: hidden; min-height: 460px; }
+.case figure .ov { align-items: flex-end; }
+.case .nums { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; }
+.case .nums div { border-radius: 14px; padding: 14px; color: #fff; }
+.case .nums b { display: block; font-size: 30px; font-weight: 500; letter-spacing: -0.03em; }
+.case .nums span { font-size: 12px; opacity: 0.85; }
+.case-t { background: var(--tint); border-radius: var(--r-card); padding: 36px; display: grid; gap: 18px; align-content: start; }
+.case-t small { font-size: 12px; color: var(--soft); }
+.case-t h3 { font-size: 34px; line-height: 1.05; }
+.case-t p { margin: 0; color: var(--muted); }
+.case-t blockquote { margin: 0; font-size: 17px; line-height: 1.45; }
+.case-t cite { display: block; font-style: normal; font-size: 13px; color: var(--soft); margin-top: 8px; }
+.btn { display: inline-flex; gap: 4px; }
+.btn .lbl { padding: 11px 18px; border-radius: 999px; background: var(--text); color: #fff; font-size: 13px; font-weight: 500; }
+.btn .arr { width: 40px; height: 40px; border-radius: 50%; background: var(--text); color: #fff; display: grid; place-items: center; }
+.btn.light .lbl, .btn.light .arr { background: var(--tint); color: var(--text); }
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.tier { border: 1px solid var(--line); border-radius: var(--r-card); padding: 28px; display: grid; gap: 14px; align-content: start; }
+.tier.hot { background: var(--tint); border-color: var(--tint); }
+.tier small { font-size: 12px; color: var(--soft); }
+.tier h3 { font-size: 24px; letter-spacing: -0.02em; }
+.tier .price { font-size: 36px; font-weight: 500; letter-spacing: -0.03em; }
+.tier .price span { font-size: 13px; color: var(--soft); letter-spacing: 0; font-weight: 400; }
+.tier ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 14px; color: #333; }
+.tier li::before { content: "+ "; color: var(--soft); }
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; border-top: 1px solid var(--text); padding-top: 22px; }
+.steps small { font-size: 12px; color: var(--soft); }
+.steps h3 { font-size: 22px; margin: 6px 0; letter-spacing: -0.02em; }
+.steps p { margin: 0; font-size: 14px; color: var(--muted); }
+.faq { display: grid; grid-template-columns: 1fr 1.4fr; gap: 40px; }
+.faq h2 { font-size: clamp(36px, 4vw, 56px); line-height: 1.02; }
+.q { border-top: 1px solid var(--line); padding: 18px 0; display: flex; justify-content: space-between; gap: 16px; font-size: 17px; font-weight: 500; }
+.q:last-child { border-bottom: 1px solid var(--line); }
+.q i { font-style: normal; color: var(--soft); }
+.q p { margin: 8px 0 0; font-size: 14px; color: var(--muted); font-weight: 400; max-width: 56ch; }
+.contact { position: relative; margin: 0 14px 14px; border-radius: var(--r-frame); overflow: hidden; min-height: 620px; color: #fff; display: grid; grid-template-columns: 1fr 420px; gap: 40px; align-items: center; padding: 56px; }
+.contact > * { position: relative; z-index: 1; }
+.contact h2 { font-size: clamp(40px, 4.8vw, 68px); line-height: 1; }
+.contact ul { list-style: none; margin: 22px 0 0; padding: 0; display: grid; gap: 8px; font-size: 15px; }
+.form { border-radius: 20px; padding: 22px; display: grid; gap: 12px; }
+.form label { font-size: 12px; font-weight: 500; }
+.form input { width: 100%; height: 46px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.85); padding: 0 14px; font: inherit; color: var(--text); margin-top: 6px; }
+.form .split { display: flex; gap: 4px; }
+.form .split .lbl { flex: 1; text-align: center; padding: 13px 18px; border-radius: 999px; background: #fff; color: var(--text); font-size: 13px; font-weight: 500; }
+.form .split .arr { width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--text); display: grid; place-items: center; }
+.form .alt { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.form .alt a { text-align: center; padding: 10px; border-radius: 999px; font-size: 12px; background: rgba(255, 255, 255, 0.18); }
+.form small { font-size: 11px; opacity: 0.8; }
+footer { padding: 30px 46px 40px; display: flex; justify-content: space-between; gap: 20px; font-size: 13px; color: var(--muted); }
+footer b { color: var(--text); font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<header class="hero" id="f-hero">
+  <canvas class="scene" data-scene="gold" aria-hidden="true"></canvas>
+  <nav class="nav" aria-label="Main">
+    <a class="logo" href="#"><i></i>Index</a>
+    <ul class="pills"><li><a href="#f-bento">Services</a></li><li><a href="#work">Work</a></li><li><a href="#pricing">Pricing</a></li><li><a href="#faq">FAQ</a></li></ul>
+    <a class="demo" href="#contact">Book a call</a>
+  </nav>
+  <div class="search glass" id="search" role="img" aria-label="Animated example: an AI shopping assistant search returns your product first">
+    <div class="s-head">
+      <span class="s-ico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg></span>
+      <span class="s-q"><span class="ph" id="s-ph">Ask an AI assistant</span><span id="s-txt"></span><span class="caret" id="s-caret"></span></span>
+      <span class="s-reg"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.6"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/></svg>Europe</span>
+    </div>
+    <div class="s-hint" id="s-hint">Silk midi dress under €300</div>
+    <div class="rows" id="rows">
+      <div class="row"><div class="slot" data-src="../assets/products/hero.jpg">photo</div><div><b>Your brand</b><span>Silk slip dress</span></div><div class="r"><b>€280</b><span>Recommended</span></div></div>
+      <div class="row"><div class="slot" data-src="../assets/products/alt-1.jpg">photo</div><div><b>Brand B</b><span>Linen wrap dress</span></div><div class="r"><b>€260</b><span>Mentioned</span></div></div>
+      <div class="row"><div class="slot" data-src="../assets/products/alt-2.jpg">photo</div><div><b>Brand C</b><span>Poplin midi dress</span></div><div class="r"><b>€245</b><span>Mentioned</span></div></div>
+    </div>
+    <div class="s-foot" id="s-foot">Your product, first in the answer</div>
+  </div>
+  <div class="cta"><a class="lbl" href="#contact">Check my AI visibility</a><a class="arr" href="#contact" aria-label="Check my AI visibility">→</a></div>
+</header>
+
+<section class="intro" id="f-intro">
+  <h1>Your products,<br>recommended by AI</h1>
+  <div>
+    <div class="stack"><span class="slot" data-src="../assets/team/1.jpg"></span><span class="slot" data-src="../assets/team/2.jpg"></span><span class="slot" data-src="../assets/team/3.jpg"></span><span class="slot" data-src="../assets/team/4.jpg"></span></div>
+    <p>AI search, product data, creative and WhatsApp sales for fashion, beauty and jewelry brands.</p>
+  </div>
+</section>
+
+<section class="bento" id="f-bento">
+  <article class="card" id="b1">
+    <figure><canvas class="scene" data-scene="peach" data-flip="0" aria-hidden="true"></canvas>
+      <div class="ov"><div class="tree">
+        <span class="wpill">Your brand</span>
+        <svg viewBox="0 0 120 200" aria-hidden="true"><path pathLength="1" d="M0 100 C60 100 50 30 120 30"/><path pathLength="1" d="M0 100 L120 100"/><path pathLength="1" d="M0 100 C60 100 50 170 120 170"/></svg>
+        <div class="list">
+          <div class="trow glass"><i>C</i><span>ChatGPT</span><small>Recommended</small></div>
+          <div class="trow glass"><i>P</i><span>Perplexity</span><small>Cited</small></div>
+          <div class="trow glass"><i>G</i><span>Google AI</span><small>Listed</small></div>
+        </div>
+      </div></div>
+    </figure>
+    <span class="lab">Get discovered · AI Visibility</span><h3>Get found in AI search</h3><p>We get your products cited where shoppers now ask.</p>
+  </article>
+  <article class="card" id="b2">
+    <figure><canvas class="scene" data-scene="rose" data-flip="1" aria-hidden="true"></canvas>
+      <div class="ov"><div class="legal">
+        <span class="wpill">Product data</span>
+        <span class="gpill glass">Fabric and fit <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+        <span class="gpill glass">Size and care <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+        <span class="gpill glass">Six languages <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+      </div></div>
+    </figure>
+    <span class="lab">Get discovered · Commerce Intelligence</span><h3>AI-ready product data</h3><p>Every product described the way assistants read it.</p>
+  </article>
+  <div class="r2">
+    <article class="card" id="b3">
+      <figure><canvas class="scene" data-scene="rose" data-flip="0" aria-hidden="true"></canvas>
+        <div class="ov"><div class="prof">
+          <div class="pc glass"><div class="slot" data-src="../assets/products/hero.jpg">photo</div><div>Silk slip dress<span>One product, every format</span></div></div>
+          <span class="wpill">Packshot <span>4 images</span></span>
+          <span class="wpill">Campaign <span>6 images</span></span>
+        </div></div>
+      </figure>
+      <span class="lab">Get desired · AI Creative Studio</span><h3>Visuals for every product</h3><p>Packshots, campaigns and video from your real products.</p>
+    </article>
+    <article class="card" id="b4">
+      <figure><canvas class="scene" data-scene="peach" data-flip="1" aria-hidden="true"></canvas>
+        <div class="ov"><div class="msgbar glass">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg>
+          <span class="q">Does it run small?</span>
+          <span class="lang" id="lang">English</span>
+        </div></div>
+      </figure>
+      <span class="lab">Get converted · Conversational Commerce</span><h3>Sell 24/7 in WhatsApp</h3><p>An assistant that answers sizing and delivery in six languages.</p>
+    </article>
+  </div>
+  <div class="r3">
+    <article class="card" id="b5">
+      <figure><canvas class="scene" data-scene="gold" data-flip="0" aria-hidden="true"></canvas>
+        <div class="ov"><div class="legal">
+          <span class="wpill">Order #1048</span>
+          <span class="gpill glass">Paid <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+          <span class="gpill glass">Shipped, customer notified <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+          <span class="gpill glass">Exchange offered <span class="tick"><svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 5.2l2 2L8 3" stroke="#111" stroke-width="1.6" fill="none"/></svg></span></span>
+        </div></div>
+      </figure>
+      <span class="lab">Get scalable · Commerce Automation</span><h3>Orders that run themselves</h3><p>Orders, returns and reporting without spreadsheets.</p>
+    </article>
+    <article class="card" id="b6">
+      <figure><canvas class="scene" data-scene="peach" data-flip="1" aria-hidden="true"></canvas>
+        <div class="ov"><div class="abt">
+          <div class="abc glass"><div class="slot" data-src="../assets/products/test-a.jpg">photo</div><b>A. Packshot</b><span class="bar"><i style="width:46%"></i></span><small>2.1% conversion</small></div>
+          <div class="abc glass win"><div class="slot" data-src="../assets/products/test-b.jpg">photo</div><b>B. Lifestyle</b><span class="bar"><i style="width:68%"></i></span><small>2.9% conversion</small><span class="wpill">Winner</span></div>
+        </div></div>
+      </figure>
+      <span class="lab">Get converted · Growth and Performance</span><h3>Tested every week</h3><p>Creative, pages and offers that improve on real data.</p>
+    </article>
+  </div>
+</section>
+
+<section class="sec" id="work">
+  <div class="sec-h"><h2>Results, not renders</h2><p>One client story, told with their numbers and their permission.</p></div>
+  <div class="case">
+    <figure><canvas class="scene" data-scene="gold" data-flip="1" aria-hidden="true"></canvas>
+      <div class="ov"><div class="nums">
+        <div class="glass"><b>+00%</b><span>AI-referred sessions</span></div>
+        <div class="glass"><b>00/14</b><span>attributes per product</span></div>
+        <div class="glass"><b>−00%</b><span>cost per image</span></div>
+      </div></div>
+    </figure>
+    <div class="case-t">
+      <small>Fashion · Client name</small>
+      <h3>Found by AI assistants in eight weeks</h3>
+      <p>Strong product, invisible in AI answers. We enriched 600 products, fixed the feeds and produced new visuals.</p>
+      <blockquote>Short client quote, two or three lines about the result.<cite>Name, Founder, Client</cite></blockquote>
+      <a class="btn" href="#work"><span class="lbl">Read the case</span><span class="arr">→</span></a>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pricing">
+  <div class="sec-h"><h2>Start small. Scale what works.</h2><p>Fixed scope and price before we start. No long contracts.</p></div>
+  <div class="tiers">
+    <div class="tier"><small>2 weeks</small><h3>AI Visibility Audit</h3><div class="price">€0,000 <span>from</span></div><ul><li>AI search report vs 3 competitors</li><li>Product data gap analysis</li><li>90-day plan</li></ul><a class="btn light" href="#contact"><span class="lbl">Start with an audit</span><span class="arr">→</span></a></div>
+    <div class="tier hot"><small>6 to 8 weeks · most chosen</small><h3>Growth Sprint</h3><div class="price">€00,000 <span>from</span></div><ul><li>Everything in the audit</li><li>Catalog and AI-ready feeds</li><li>Visuals for 50 products</li><li>Product page copy</li></ul><a class="btn" href="#contact"><span class="lbl">Plan my sprint</span><span class="arr">→</span></a></div>
+    <div class="tier"><small>Monthly</small><h3>Commerce Partner</h3><div class="price">€0,000 <span>/ month</span></div><ul><li>Ongoing AI visibility</li><li>Creative production</li><li>WhatsApp agent and CRM</li><li>Monthly testing</li></ul><a class="btn light" href="#contact"><span class="lbl">Talk to us</span><span class="arr">→</span></a></div>
+  </div>
+</section>
+
+<section class="sec" id="process">
+  <div class="sec-h"><h2>How we work</h2><p>Clear steps and deliverables you can check.</p></div>
+  <div class="steps">
+    <div><small>Week 1 to 2</small><h3>Audit</h3><p>We measure your AI visibility and product data.</p></div>
+    <div><small>Week 3</small><h3>Plan</h3><p>Priorities, scope and a fixed price.</p></div>
+    <div><small>Week 4 to 8</small><h3>Build</h3><p>Data, visuals, pages and agents go live.</p></div>
+    <div><small>Monthly</small><h3>Grow</h3><p>We test, report and improve.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="faq">
+    <h2>Questions, answered</h2>
+    <div>
+      <div class="q"><div>Will AI images look fake?<p>Every image starts from your real product and is approved by your team. If it doesn't match the sample, it doesn't ship.</p></div><i>−</i></div>
+      <div class="q">Do you work with Shopify and other platforms?<i>+</i></div>
+      <div class="q">How fast will we see results?<i>+</i></div>
+      <div class="q">What happens to our data?<i>+</i></div>
+      <div class="q">Can we start with one service?<i>+</i></div>
+    </div>
+  </div>
+</section>
+
+<section class="contact" id="contact">
+  <canvas class="scene" data-scene="gold" aria-hidden="true"></canvas>
+  <div>
+    <h2>Let's make AI<br>recommend you</h2>
+    <ul><li>Reply within one working day</li><li>30-minute call, no slides</li><li>Fixed price before we start</li></ul>
+  </div>
+  <form class="form glass" onsubmit="return false">
+    <small>Step 1 of 2</small>
+    <label>Work email<input type="email" placeholder="you@brand.com"></label>
+    <label>Brand website<input placeholder="brand.com"></label>
+    <div class="split"><a class="lbl" href="#contact">Continue</a><a class="arr" href="#contact" aria-label="Continue">→</a></div>
+    <div class="alt"><a href="#contact">Book a time directly</a><a href="#contact">Message on WhatsApp</a></div>
+  </form>
+</section>
+<footer><b>Index</b><span>AI-native commerce agency for fashion, beauty and jewelry brands</span><span>Working name. Numbers and prices are placeholders.</span></footer>
+
+<script>
+(function () {
+  "use strict";
+  /* ── Scene: silk folds in warm light (stand-in for generated video) ── */
+  var PAL = {
+    gold: { sky: ["#e2a64a", "#b8761f", "#5f3a12"], silk: ["#ffd88e", "#e2a243", "#9c5f1b", "#4e2c0c"], glow: "rgba(255,226,160,0.55)", shade: "rgba(60,30,6,0.20)" },
+    peach: { sky: ["#ecb49c", "#c98374", "#7c4a4a"], silk: ["#ffdccb", "#eba890", "#b06e66", "#5e3434"], glow: "rgba(255,226,210,0.5)", shade: "rgba(70,30,30,0.18)" },
+    rose: { sky: ["#e7aeb0", "#bf7f8a", "#6e4050"], silk: ["#ffdde0", "#e8a4ad", "#a8636f", "#57303c"], glow: "rgba(255,225,228,0.5)", shade: "rgba(60,25,35,0.18)" },
+  };
+  function draw(cv, t) {
+    var r = cv.getBoundingClientRect(), dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = Math.max(1, Math.round(r.width * dpr)), H = Math.max(1, Math.round(r.height * dpr));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    var g = cv.getContext("2d"), P = PAL[cv.dataset.scene] || PAL.gold, flip = cv.dataset.flip === "1";
+    var sky = g.createLinearGradient(0, 0, 0, H);
+    sky.addColorStop(0, P.sky[0]); sky.addColorStop(0.55, P.sky[1]); sky.addColorStop(1, P.sky[2]);
+    g.fillStyle = sky; g.fillRect(0, 0, W, H);
+    g.save();
+    if (flip) { g.translate(W, 0); g.scale(-1, 1); }
+    // Folds: wide ribbons of silk sweeping from lower left, each lit from the top.
+    var n = 7;
+    for (var k = 0; k < n; k++) {
+      var f = k / (n - 1);
+      var base = H * (0.55 + 0.42 * f), amp = H * (0.12 + 0.05 * Math.sin(k * 1.7)), thick = H * (0.16 + 0.08 * f);
+      var ph = k * 1.3 + t * (0.18 + 0.05 * k);
+      g.beginPath();
+      var steps = 48, x, y;
+      for (var i = 0; i <= steps; i++) {
+        x = (i / steps) * W * 1.15 - W * 0.05;
+        y = base - (i / steps) * H * 0.55 + Math.sin(i / steps * 3.2 + ph) * amp;
+        if (i === 0) g.moveTo(x, y); else g.lineTo(x, y);
+      }
+      for (i = steps; i >= 0; i--) {
+        x = (i / steps) * W * 1.15 - W * 0.05;
+        y = base - (i / steps) * H * 0.55 + Math.sin(i / steps * 3.2 + ph + 0.35) * amp + thick;
+        g.lineTo(x, y);
+      }
+      g.closePath();
+      var lg = g.createLinearGradient(0, base - H * 0.5, 0, base + thick);
+      lg.addColorStop(0, P.silk[0]); lg.addColorStop(0.35, P.silk[1]); lg.addColorStop(0.75, P.silk[2]); lg.addColorStop(1, P.silk[3]);
+      g.globalAlpha = 0.55 + 0.35 * f;
+      g.filter = "blur(" + Math.round((1.5 - f) * 6 * dpr) + "px)";
+      g.fillStyle = lg; g.fill();
+    }
+    g.restore();
+    g.filter = "none"; g.globalAlpha = 1;
+    // Light bloom and soft vignette.
+    var bl = g.createRadialGradient(W * (flip ? 0.25 : 0.7), H * 0.12, 0, W * (flip ? 0.25 : 0.7), H * 0.12, Math.max(W, H) * 0.7);
+    bl.addColorStop(0, P.glow); bl.addColorStop(1, "rgba(255,255,255,0)");
+    g.fillStyle = bl; g.fillRect(0, 0, W, H);
+    var vg = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.35, W / 2, H / 2, Math.max(W, H) * 0.8);
+    vg.addColorStop(0, "rgba(0,0,0,0)"); vg.addColorStop(1, "rgba(70,40,10,0.22)");
+    g.fillStyle = vg; g.fillRect(0, 0, W, H);
+    g.fillStyle = P.shade; g.fillRect(0, 0, W, H);
+    // Dust in the light.
+    for (var d = 0; d < 26; d++) {
+      var px = ((d * 137.5) % 100) / 100 * W, py = ((d * 61.8 + t * 6) % 100) / 100 * H, rr = (1 + (d % 3)) * dpr;
+      g.fillStyle = "rgba(255,255,255," + (0.25 + (d % 4) * 0.12) + ")";
+      g.beginPath(); g.arc(px, py, rr, 0, Math.PI * 2); g.fill();
+    }
+  }
+  var scenes = [].slice.call(document.querySelectorAll("canvas.scene"));
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ── Photo slots: client's file if present ── */
+  document.querySelectorAll(".slot[data-src]").forEach(function (el) {
+    var img = new Image(); img.alt = "";
+    img.onload = function () { el.textContent = ""; el.appendChild(img); };
+    img.src = el.dataset.src;
+  });
+
+  /* ── Search card timeline (9.5 s loop), a pure function of t ── */
+  var Q = "Silk midi dress";
+  var txt = document.getElementById("s-txt"), ph = document.getElementById("s-ph"), caret = document.getElementById("s-caret");
+  var hint = document.getElementById("s-hint"), rows = [].slice.call(document.querySelectorAll("#rows .row")), foot = document.getElementById("s-foot");
+  var card = document.getElementById("search");
+  function clamp(v) { return Math.min(1, Math.max(0, v)); }
+  function seg(t, a, b) { return clamp((t - a) / (b - a)); }
+  function out3(x) { return 1 - Math.pow(1 - x, 3); }
+  function setHero(t) {
+    var typed = Math.round(Q.length * seg(t, 0.6, 0.6 + Q.length * 0.06));
+    var erase = seg(t, 7.9, 8.6);
+    var n = Math.round(typed * (1 - erase));
+    txt.textContent = Q.slice(0, n);
+    ph.style.opacity = n ? 0 : 0.55;
+    caret.style.opacity = t < 2.2 || t > 7.8 ? 1 : 0;
+    var h = seg(t, 1.3, 1.6) * (1 - seg(t, 2.0, 2.2));
+    hint.style.opacity = h; hint.style.transform = "translateY(" + (1 - h) * 6 + "px)";
+    hint.style.display = h > 0 ? "" : "none";
+    var any = false;
+    rows.forEach(function (r, i) {
+      var a = out3(seg(t, 2.2 + i * 0.25, 2.65 + i * 0.25)) * (1 - seg(t, 7.5 + i * 0.08, 7.8 + i * 0.08));
+      r.style.opacity = a; r.style.transform = "translateY(" + (1 - a) * 12 + "px)";
+      r.style.display = a > 0 ? "" : "none"; any = any || a > 0;
+    });
+    var f = seg(t, 3.3, 3.6) * (1 - seg(t, 7.5, 7.7));
+    foot.style.opacity = f; foot.style.display = f > 0 ? "" : "none";
+    document.getElementById("rows").style.display = any ? "" : "none";
+  }
+  var LANGS = ["English", "Deutsch", "Français", "Italiano", "Español", "Português"];
+  function setBento(p) {
+    // p: 0 → 1 reveal for all four overlays (scroll-triggered once in the live page).
+    var paths = document.querySelectorAll("#b1 path");
+    paths.forEach(function (pa, i) { pa.style.strokeDasharray = 1; pa.style.strokeDashoffset = 1 - seg(p, 0.15 + i * 0.05, 0.45 + i * 0.05); });
+    document.querySelectorAll("#b1 .trow").forEach(function (el, i) { var a = out3(seg(p, 0.4 + i * 0.12, 0.6 + i * 0.12)); el.style.opacity = a; el.style.transform = "translateX(" + (1 - a) * 10 + "px)"; });
+    document.querySelectorAll("#b2 .gpill").forEach(function (el, i) { var a = out3(seg(p, 0.2 + i * 0.15, 0.4 + i * 0.15)); el.style.opacity = a; el.style.transform = "translateY(" + (1 - a) * 8 + "px)"; el.querySelector(".tick").style.transform = "scale(" + seg(p, 0.35 + i * 0.15, 0.45 + i * 0.15) + ")"; });
+    document.querySelectorAll("#b3 .prof > *").forEach(function (el, i) { var a = out3(seg(p, 0.15 + i * 0.15, 0.4 + i * 0.15)); el.style.opacity = a; el.style.transform = "translateY(" + (1 - a) * 8 + "px)"; });
+    document.querySelectorAll("#b5 .legal > *").forEach(function (el, i) { var a = out3(seg(p, 0.15 + i * 0.12, 0.35 + i * 0.12)); el.style.opacity = a; el.style.transform = "translateY(" + (1 - a) * 8 + "px)"; });
+    document.querySelectorAll("#b6 .bar i").forEach(function (el) { el.style.transform = "scaleX(" + out3(seg(p, 0.3, 0.8)) + ")"; el.style.transformOrigin = "left"; });
+    var mb = document.querySelector("#b4 .msgbar"), a4 = out3(seg(p, 0.1, 0.4));
+    mb.style.opacity = a4; mb.style.transform = "translateX(" + (1 - a4) * -24 + "px)";
+  }
+  window.storyboard = { setHero: setHero, setBento: setBento, draw: function (t) { scenes.forEach(function (c) { draw(c, t); }); } };
+
+  var params = new URLSearchParams(location.search);
+  if (params.has("t")) { // frozen frame for the storyboard
+    var ft = +params.get("t");
+    window.storyboard.draw(ft); setHero(ft); setBento(+(params.get("b") || 1));
+    if (params.get("lang")) document.getElementById("lang").textContent = params.get("lang");
+    return;
+  }
+  setBento(1);
+  if (reduce) { window.storyboard.draw(0); setHero(5); return; }
+  var t0 = performance.now(), li = 0;
+  setInterval(function () { li = (li + 1) % LANGS.length; document.getElementById("lang").textContent = LANGS[li]; }, 1600);
+  (function loop(now) {
+    var t = (now - t0) / 1000;
+    setHero(t % 9.5);
+    window.storyboard.draw(t);
+    requestAnimationFrame(loop);
+  })(t0);
+})();
+</script>
+</body>
+</html>
